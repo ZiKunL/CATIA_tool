@@ -1,0 +1,253 @@
+Dim objGEXCELapp As Object 
+Dim objGEXCELwkBks As Object 
+Dim objGEXCELwkBk As Object 
+Dim objGEXCELwkShs As Object 
+Dim objGEXCELSh As Object 
+Dim fs, f, f1, fc, s 
+Dim coords(2) As Variant
+Dim PartDocument1
+
+Sub CATMain()
+
+Set documents1 = CATIA.Documents
+
+'Set document1 = documents1.Open("C:\Users\Kun\Desktop\jwb-geom-v2-mm.stp")
+
+Set partDocument1 = CATIA.ActiveDocument
+
+Set part1 = partDocument1.Part
+
+Set hybridShapeFactory1 = part1.HybridShapeFactory
+
+Set originElements1 = part1.OriginElements
+
+Set hybridShapePlaneExplicit1 = originElements1.PlaneZX
+
+Set reference1 = part1.CreateReferenceFromObject(hybridShapePlaneExplicit1)
+
+'这里改切片位置
+Set hybridShapePlaneOffset1 = hybridShapeFactory1.AddNewPlaneOffset(reference1, 3021.48, False)
+
+Set hybridBodies1 = part1.HybridBodies
+
+Set hybridBody1 = hybridBodies1.Add()
+
+hybridBody1.AppendHybridShape hybridShapePlaneOffset1
+
+part1.InWorkObject = hybridShapePlaneOffset1
+
+part1.Update 
+
+Set hybridShapePointCoord1 = hybridShapeFactory1.AddNewPointCoord(0.000000, 0.000000, 0.000000)
+
+hybridBody1.AppendHybridShape hybridShapePointCoord1
+
+part1.InWorkObject = hybridShapePointCoord1
+
+part1.Update 
+
+Set hybridShapePlaneExplicit2 = originElements1.PlaneYZ
+
+Set reference2 = part1.CreateReferenceFromObject(hybridShapePlaneExplicit2)
+
+Set reference3 = part1.CreateReferenceFromObject(hybridShapePointCoord1)
+
+Set hybridShapeLineNormal1 = hybridShapeFactory1.AddNewLineNormal(reference2, reference3, 2000.000000, 20.000000, False)
+
+hybridBody1.AppendHybridShape hybridShapeLineNormal1
+
+part1.InWorkObject = hybridShapeLineNormal1
+
+part1.Update 
+
+Set bodies1 = part1.Bodies
+
+Set body1 = bodies1.Item("MANIFOLD_SOLID_BREP #101")
+
+Set reference4 = part1.CreateReferenceFromObject(body1)
+
+Set reference5 = part1.CreateReferenceFromObject(hybridShapePlaneOffset1)
+
+Set hybridShapeIntersection1 = hybridShapeFactory1.AddNewIntersection(reference4, reference5)
+
+hybridShapeIntersection1.PointType = 0
+
+hybridBody1.AppendHybridShape hybridShapeIntersection1
+
+part1.InWorkObject = hybridShapeIntersection1
+
+part1.Update 
+
+Set reference6 = part1.CreateReferenceFromObject(hybridShapeLineNormal1)
+
+Set hybridShapeDirection1 = hybridShapeFactory1.AddNewDirection(reference6)
+
+Set reference7 = part1.CreateReferenceFromObject(hybridShapeIntersection1)
+
+Set hybridShapeExtremum1 = hybridShapeFactory1.AddNewExtremum(reference7, hybridShapeDirection1, 1)
+
+hybridBody1.AppendHybridShape hybridShapeExtremum1
+
+part1.InWorkObject = hybridShapeExtremum1
+
+part1.Update 
+
+part1.Update 
+
+Set reference8 = part1.CreateReferenceFromObject(hybridShapeLineNormal1)
+
+Set hybridShapeDirection2 = hybridShapeFactory1.AddNewDirection(reference8)
+
+Set reference9 = part1.CreateReferenceFromObject(hybridShapeIntersection1)
+
+Set hybridShapeExtremum2 = hybridShapeFactory1.AddNewExtremum(reference9, hybridShapeDirection2, 0)
+
+hybridBody1.AppendHybridShape hybridShapeExtremum2
+
+part1.InWorkObject = hybridShapeExtremum2
+
+part1.Update 
+
+Dim reference1 As Reference
+Set reference1 = part1.CreateReferenceFromObject(hybridShapeExtremum1)
+Dim reference2 As Reference
+Set reference2 = part1.CreateReferenceFromObject(hybridShapeExtremum2)
+Dim hybridShapeLinePtPt1 As HybridShapeLinePtPt
+Set hybridShapeLinePtPt1 = hybridShapeFactory1.AddNewLinePtPt(reference1, reference2)
+
+hybridBody1.AppendHybridShape hybridShapeLinePtPt1
+
+part1.InWorkObject = hybridShapeLinePtPt1
+
+part1.Update 
+
+Set reference10 = part1.CreateReferenceFromObject(hybridShapeIntersection1)
+
+Set reference11 = part1.CreateReferenceFromObject(hybridShapeLinePtPt1)
+
+Set hybridShapeSplit1 = hybridShapeFactory1.AddNewHybridSplit(reference10, reference11, 1)
+
+hybridShapeFactory1.GSMVisibility reference10, 0
+
+hybridBody1.AppendHybridShape hybridShapeSplit1
+
+part1.InWorkObject = hybridShapeSplit1
+
+Set reference12 = part1.CreateReferenceFromObject(hybridShapeIntersection1)
+
+Set reference13 = part1.CreateReferenceFromObject(hybridShapeLinePtPt1)
+
+Set hybridShapeSplit2 = hybridShapeFactory1.AddNewHybridSplit(reference12, reference13, -1)
+
+hybridShapeFactory1.GSMVisibility reference12, 0
+
+hybridBody1.AppendHybridShape hybridShapeSplit2
+
+part1.InWorkObject = hybridShapeSplit2
+
+part1.Update 
+
+part1.Update 
+
+Dim hybridBody2 As HybridBody
+Set hybridBody2 = hybridBodies1.Add()
+
+Set selection1 = partDocument1.Selection
+
+Dim reference14 As Reference
+Set reference14 = part1.CreateReferenceFromObject(hybridShapeSplit1)
+
+
+'这里写上翼面的切点数量，最好能被1除尽，100，200都可以
+Dim num
+num=200
+
+For i=0 To num
+
+Dim hybridShapePointOnCurve1 As HybridShapePointOnCurve
+Set hybridShapePointOnCurve1 = hybridShapeFactory1.AddNewPointOnCurveFromPercent(reference14, 1/num*i, False)
+
+hybridBody2.AppendHybridShape hybridShapePointOnCurve1
+
+part1.InWorkObject = hybridShapePointOnCurve1
+part1.Update 
+selection1.Add hybridShapePointOnCurve1
+Next
+
+Dim hybridBody3 As HybridBody
+Set hybridBody3 = hybridBodies1.Add()
+
+Set selection2 = partDocument1.Selection
+
+Dim reference15 As Reference
+Set reference15 = part1.CreateReferenceFromObject(hybridShapeSplit2)
+For i=1 To num-1
+
+Dim hybridShapePointOnCurve2 As HybridShapePointOnCurve
+Set hybridShapePointOnCurve2 = hybridShapeFactory1.AddNewPointOnCurveFromPercent(reference15, 1/num*i, False)
+
+hybridBody3.AppendHybridShape hybridShapePointOnCurve2
+
+part1.InWorkObject = hybridShapePointOnCurve2
+part1.Update 
+
+selection2.Add hybridShapePointOnCurve2
+Next
+
+
+StartEXCEL
+ExportPoint
+
+Dim selection3 As Selection
+Set selection3 = partDocument1.Selection
+
+selection3.Add hybridBody1
+selection3.Add hybridBody2
+selection3.Add hybridBody3
+selection3.Delete 
+End Sub
+
+Sub StartEXCEL() 
+'****************************************************************************** 
+Err.Clear 
+On Error Resume Next 
+Set objGEXCELapp = GetObject (,"EXCEL.Application") 
+
+If Err.Number <> 0 Then 
+Err.Clear 
+Set objGEXCELapp = CreateObject ("EXCEL.Application") 
+End If
+objGEXCELapp.Application.Visible = TRUE 
+Set objGEXCELwkBks = objGEXCELapp.Application.WorkBooks 
+Set objGEXCELwkBk = objGEXCELwkBks.Add 
+Set objGEXCELwkShs = objGEXCELwkBk.Worksheets(1) 
+Set objGEXCELSh = objGEXCELwkBk.Sheets (1) 
+objGEXCELSh.Cells (1,"A") = "Name" 
+objGEXCELSh.Cells (1,"B") = "X" 
+objGEXCELSh.Cells (1,"C") = "Y" 
+objGEXCELSh.Cells (1,"D") = "Z"
+End Sub
+'****************************************************************************** 
+Sub ExportPoint() 
+'****************************************************************************** 
+For i = 1 To CATIA.ActiveDocument.Selection.Count 
+Set selection = CATIA.ActiveDocument.Selection 
+Set element = selection.Item(i) 
+Set point = element.value
+'Write PointData to Excel Sheet 
+point.GetCoordinates(coords)
+objGEXCELSh.Cells (i+1,"A") = point.name 
+objGEXCELSh.Cells (i+1,"B") = coords(0) 
+objGEXCELSh.Cells (i+1,"C") = coords(1) 
+objGEXCELSh.Cells (i+1,"D") = coords(2)
+
+Next
+
+
+objGEXCELapp.ActiveWorkbook.SaveAs("C:\Users\Kun\Desktop\point_location.xls")'保存工作表
+objGEXCELapp.Workbooks(1).Close '关闭工作表
+objGEXCELapp.Quit  ' 退出
+
+
+
+End Sub
