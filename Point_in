@@ -1,0 +1,71 @@
+Sub CATMain()
+       Dim documents1 As Documents
+				Set documents1 = CATIA.Documents
+
+				Set partDocument1 = CATIA.ActiveDocument
+
+				Dim part1 As Part
+				Set part1 = partDocument1.Part
+
+				Dim hybridBodies1 As HybridBodies
+				Set hybridBodies1 = part1.HybridBodies
+
+				Dim hybridBody1 As HybridBody
+				Set hybridBody1 = hybridBodies1.Add()
+				Dim hybridBody2 As HybridBody
+				Set hybridBody2 = hybridBodies1.Add()
+				Dim hybridShapeFactory1
+        Set hybridShapeFactory1 = part1.HybridShapeFactory
+        
+        part1.Update()
+        '    'Get the size of section data 1 array,then define it
+        Dim WingSecData1N
+        Dim Coodx As String
+        WingSecData1N = 0
+        Dim Excel As Object
+        Set Excel = GetObject("C:\Users\Kun\Desktop\横向麦克风.xlsx")
+        Do
+            WingSecData1N = WingSecData1N + 1
+            Coodx = Excel.worksheets(1).Cells.range("A" + CStr(1 + WingSecData1N)).Value
+        Loop Until Coodx = ""
+        'WingSecData1N = WingSecData1N - 1
+        ReDim WingSecData1(WingSecData1N, 2)
+        Dim i As Integer
+        For i = 1 To WingSecData1N
+            WingSecData1(i, 1) = Excel.worksheets(1).Cells.range("A" + CStr(i)).Value
+            WingSecData1(i, 2) = Excel.worksheets(1).Cells.range("B" + CStr(i)).Value
+        Next
+        '    'Consturct Airfoil section
+        Dim hybridShapeSpline1
+        Set hybridShapeSpline1 = hybridShapeFactory1.AddNewSpline()
+        hybridShapeSpline1.SetSplineType 0 
+        hybridShapeSpline1.SetClosing 0
+
+        For i = 1 To WingSecData1N
+
+            Xroot = WingSecData1(i, 1)
+           	Yroot = WingSecData1(i, 2)
+            Zroot = 0
+
+            Dim hybridShapePointCoord1
+            Set hybridShapePointCoord1 = hybridShapeFactory1.AddNewPointCoord(Xroot, Yroot, Zroot)
+            hybridBody2.AppendHybridShape(hybridShapePointCoord1)
+
+            part1.InWorkObject = hybridShapePointCoord1
+
+            part1.Update()
+
+            Set reference1 = part1.CreateReferenceFromObject(hybridShapePointCoord1)
+            hybridShapeSpline1.AddPointWithConstraintExplicit reference1, Nothing, -1, 1, Nothing, 0
+        Next
+        hybridBody1.AppendHybridShape hybridShapeSpline1
+
+        part1.InWorkObject = hybridShapeSpline1
+
+        part1.Update()
+
+
+			
+
+End Sub
+
